@@ -1,0 +1,159 @@
+####################################################
+
+# Re-Created on MAR 2021 as earlier all work lost due to system crash
+## @author: Sarang Thakare
+
+## Assignment on Hypothesis Testing
+# Problem on Cutlet Diameters
+
+###################################################
+
+# Import packages and libraries
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import scipy 
+from scipy import stats
+import pylab
+import seaborn as sb
+import math as math
+
+###################################################
+
+# Load Dataset
+
+cutlets = pd.read_csv("C:\\Users\\320101002\\Documents\\Data_Science\\3_Hypothesis Testing\\Download_3\\Cutlets.csv")
+cutlets.shape # To see number of records and columns
+cutlets.head(10) # to see top 10 observations of the data
+
+###################################################
+
+# Business Problem
+
+# To evaluate if Unit A and Unit B are producing cutlets of different diameters
+
+# Ho = Null Hypothesis:  There is NO difference in cutlets diameters produced in Unit A and B
+# Ha = Alternate Hypothesis : Cutlets from Unit A are different than those produced in Unit B
+
+###################################################
+
+# Assigning names to the data sets
+
+unit_a = cutlets['Unit A']
+unit_b = cutlets['Unit B']
+
+###################################################
+
+# Exploratory Data Analysis
+
+#Doing Normality test 
+# Ho: Data are normal
+# Ha: Data are not normal
+
+plt.hist(unit_a,label='Unit A')
+plt.hist(unit_b,label='Unit B')
+plt.show()
+
+# We see lot of overlap in two histograms
+
+plt.boxplot(unit_a,vert=False)
+plt.boxplot(unit_b,vert=False)  # Unit B data has one outlier
+
+stats.probplot(unit_a,plot=pylab)
+stats.probplot(unit_b,plot=pylab)
+
+unit_a_norm = stats.shapiro(unit_a)
+unit_a_p = unit_a_norm[1]
+print(unit_a_p)
+
+unit_b_norm = stats.shapiro(unit_b)
+unit_b_p = unit_b_norm[1]
+print(unit_b_p)
+
+# P values are greater than 0.05 for both units A and B, hence data is normal
+# We see an outlier in Unit B datasets, however let us proceed without deleting outliers
+
+###################################################
+
+# Models to be used
+# X is Discret Variable - Unit A and Unit B
+# Y is continuous variable - Diameter
+# Need to use T test to check if the means are different if the variances are same  
+
+###################################################
+
+# Performing Mann whitney
+
+from scipy.stats import mannwhitneyu
+mannwhitneyu(unit_a,unit_b)
+
+# P 0.2553 > 0.05,  P high Null fly,  No difference in Cutlet diameters
+
+###################################################
+
+# Performing 2 Sample T test
+
+#Varience test 
+
+# Checking if the variances for both unit A and unit B are equal 
+# Ho: Variances are equal
+# Ha: Variances are NOT equal
+
+scipy.stats.levene(unit_a,unit_b)
+# P Value is 0.4176 > 0.05, Null fly; Variances are equal.
+
+# We can proceed with 2 sample t test
+
+#2 Sample T test 
+scipy.stats.ttest_ind(unit_a,unit_b)
+xbar_unit_a = unit_a.mean()
+xbar_unit_b = unit_b.mean()
+
+# 2 Sample t test for equal variance
+stats.ttest_ind(unit_a,unit_b, equal_var = True)
+# P Value is 0.4722 > 0.05, Null fly; Variances are equal.
+
+# P value is 0.4722 which is greater than 0.05, P high Null Fly, There is no statistical difference in diameters
+# of cutlets produced by Unit A and Unit B 
+
+#####################################################
+
+ # Finding confidence interval of means for both unit a andf unit b
+
+from scipy.stats import norm
+n = len(cutlets)
+conf_coeff = 0.95
+alpha = 1 - conf_coeff
+stddev_unit_a = unit_a.std()
+stddev_unit_a
+stddev_unit_b = unit_b.std()
+stddev_unit_b
+
+z_critical = stats.norm.ppf(q=0.975) # Z value for 95% confidence i.e.at Z = 0.975
+z_critical
+
+# Standard Error of Mean = Std Deviation / Sqrt n
+se_unit_a = z_critical*stddev_unit_a/math.sqrt(n)
+se_unit_b = z_critical*stddev_unit_b/math.sqrt(n)
+
+CI_lower_unit_a = xbar_unit_a - se_unit_a
+CI_upper_unit_a = xbar_unit_a + se_unit_a
+
+CI_lower_unit_b = xbar_unit_b - se_unit_a
+CI_upper_unit_b = xbar_unit_b + se_unit_a
+
+print("CI interval for unit a",CI_lower_unit_a,CI_upper_unit_a)
+print("CI interval for unit b",CI_lower_unit_b,CI_upper_unit_b)
+
+#####################################################
+
+#Conclusion:
+# P Value is 0.4722 > 0.05, Null fly; Variances are equal.
+# P value is 0.4722 which is greater than 0.05, P high Null Fly, There is no statistical difference in diameters
+# of cutlets produced by Unit A and Unit B 
+
+# From the confidence interval we see that they are not distict.
+# So, statistically both unit a and b do NOT produce cutlets of different diameters. 
+
+#####################################################
